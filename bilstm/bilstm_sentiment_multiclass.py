@@ -12,7 +12,7 @@ SEED = 42
 random.seed(SEED); np.random.seed(SEED); tf.random.set_seed(SEED)
 
 # ==== Config
-CSV_PATH = "/home/dat/llm_ws/data/train/vn_product_reviews_5sentiments_10k_v2_clean.csv"  # <-- dùng bản V2
+CSV_PATH = "/home/dat/llm_ws/data/train/vn_reviews_train_clean_5cls_diverse_v3.csv"  
 MAX_VOCAB = 20000
 SEQ_LEN   = 64
 EMBED_DIM = 128
