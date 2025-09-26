@@ -1,13 +1,14 @@
 import requests, json, re, sys
 
-MODEL = "qwen2.5:7b-instruct"          # hoặc "llama3.1:8b-instruct"
+MODEL = "qwen2.5:14b-instruct"
 URL   = "http://localhost:11434/api/generate"
 LABELS = {"very_positive","positive","neutral","negative","very_negative"}
 
 SYSTEM_PROMPT = (
-    "Bạn là bộ phân loại cảm xúc tiếng Việt. "
-    "Năm nhãn hợp lệ (chỉ được chọn một): very_positive, positive, neutral, negative, very_negative.\n"
-    "Chỉ trả về JSON duy nhất dạng: {\"label\":\"<một trong năm nhãn>\"}"
+    "Bạn là bộ phân loại cảm xúc tiếng Việt.\n"
+    "Chỉ trả lời đúng MỘT JSON duy nhất dạng: {\"label\":\"<một trong 5 nhãn>\"}\n"
+    "Năm nhãn hợp lệ: very_positive, positive, neutral, negative, very_negative.\n"
+    "Không giải thích, không thêm chữ nào ngoài JSON."
 )
 
 def classify(text: str) -> str:
@@ -19,16 +20,17 @@ def classify(text: str) -> str:
         "model": MODEL,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0, "top_p": 1, "seed": 42}
+        # 👇 Quan trọng: unload model ngay khi xong
+        "keep_alive": 0,
+        "options": {"temperature": 0, "top_p": 1, "seed": 42, "num_ctx": 2048}
     }
-    r = requests.post(URL, json=payload, timeout=60)
+    r = requests.post(URL, json=payload, timeout=120)
     r.raise_for_status()
     out = r.json().get("response","").strip()
 
-    # Tóm lấy JSON duy nhất trong phản hồi
     m = re.search(r'\{.*\}', out, flags=re.DOTALL)
     if not m:
-        return "neutral"  # fallback an toàn
+        return "neutral"
 
     try:
         obj = json.loads(m.group(0))
